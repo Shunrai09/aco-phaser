@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { ACOScene } from './scenes/ACOScene';
+import { ACOScene } from './scenes/ACOscene';
 
 const config = {
   type: Phaser.AUTO,
