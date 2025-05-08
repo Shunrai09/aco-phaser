@@ -15,22 +15,15 @@ export class ACOScene extends Phaser.Scene {
   constructor() {
     super('ACOScene');
 
-    // Parámetros ACO
     this.alpha = ACO_PARAMS.alpha;
     this.beta = ACO_PARAMS.beta;
     this.evaporationRate = ACO_PARAMS.evaporationRate;
     this.numAntsPerColony = ACO_PARAMS.numAntsPerColony;
-
-    // Estructuras
     this.nodes = NODES;
     this.edges = [];
     this.pheromones = [];
     this.ants = [];
-
-    // Colonias
     this.colonies = COLONIES;
-
-    // Semáforos
     this.specialEdges = SPECIAL_EDGES;
     this.edgeStates = {};
     this.specialEdges.forEach(key => this.edgeStates[key] = true);
@@ -39,7 +32,6 @@ export class ACOScene extends Phaser.Scene {
   }
 
   preload() { }
-
   create() {
     this.graphics = this.add.graphics();
 
@@ -73,7 +65,6 @@ export class ACOScene extends Phaser.Scene {
 
     this.edges = ensureConnectivity(this.nodes, this.edges);
 
-    // Añadir aristas críticas
     BASE_EDGES.forEach(([i, j]) => {
       if (i < this.nodes.length && j < this.nodes.length &&
         !this.edges.some(e => (e[0] === i && e[1] === j) || (e[0] === j && e[1] === i))) {
@@ -177,14 +168,12 @@ export class ACOScene extends Phaser.Scene {
       return true;
     });
 
-    // 4. Calcular probabilidades (feromonas + heurística)
     const probs = validNeighbors.map(n => {
       const pher = this.pheromones[ant.current][n];
       const heur = 1 / Phaser.Math.Distance.BetweenPoints(this.nodes[ant.current], this.nodes[n]);
       return Math.pow(pher, this.alpha) * Math.pow(heur, this.beta);
     });
 
-    // 5. Selección probabilística
     const total = probs.reduce((s, p) => s + p, 0);
     let rnd = Math.random(), sum = 0;
 
@@ -193,17 +182,15 @@ export class ACOScene extends Phaser.Scene {
       if (rnd <= sum) return validNeighbors[i];
     }
 
-    return validNeighbors[validNeighbors.length - 1]; // Fallback
-  }
+    return validNeighbors[validNeighbors.length - 1]; 
 
   updatePheromones() {
-    // evaporación
+   
     this.edges.forEach(([i, j]) => {
       this.pheromones[i][j] *= this.evaporationRate;
       this.pheromones[j][i] *= this.evaporationRate;
     });
 
-    // contar llegadas y refuerzo
     this.ants.forEach(ant => {
       if (ant.arrived && !ant.counted) {
         ant.counted = true;
@@ -231,7 +218,6 @@ export class ACOScene extends Phaser.Scene {
     this.graphics.clear();
     const maxPheromone = Math.max(...this.edges.map(([i, j]) => this.pheromones[i][j]));
 
-    // Definir las calles con mayor grosor (puedes agregar más según lo necesites)
     const thickerStreets = [
       "0-1", "0-11", "11-12", "12-13", "13-14", "14-15", "15-16", "16-17", "17-19", "18-19", "18-55", "10-55", "9-10", "8-9", "7-8", "6-7", "5-6", "4-5", "3-4", "2-3", "1-2"
     ];
@@ -241,16 +227,15 @@ export class ACOScene extends Phaser.Scene {
 
       let color, width;
 
-      // Si la arista es una de las "gruesas", asignamos el grosor y color correspondientes
       if (thickerStreets.includes(edgeKey)) {
-        width = 6;  // Doble de gruesa (grosor base: 3 para las normales)
-        color = 0xff7f00;  // Naranja para las calles gruesas
+        width = 6;  
+        color = 0xff7f00; 
       } else {
-        width = 3;  // Grosor base para las calles normales
-        color = Phaser.Display.Color.GetColor(25, 100, 100);  // Amarillo para las calles normales
+        width = 3;  
+        color = Phaser.Display.Color.GetColor(25, 100, 100);  
       }
 
-      // Dibujar la línea de la arista
+    
       this.graphics.lineStyle(width, color);
       this.graphics.lineBetween(
         this.nodes[i].x, this.nodes[i].y,
